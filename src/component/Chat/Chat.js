@@ -4,7 +4,8 @@ import socketIO from "socket.io-client";
 import styled from "styled-components";
 import { FormControl, Input, InputAdornment } from "@mui/material";
 import Message from "../Message/Message";
-import Scroll from "react-scroll-to-bottom";
+import ScrollToBottom from "react-scroll-to-bottom";
+import { useNavigate } from "react-router-dom";
 
 const Box = styled.div`
   border: 1px solid #fefcff;
@@ -19,7 +20,7 @@ const ENDPOINT = "http://localhost:9000/";
 const Chat = () => {
   const [id, setid] = useState("");
   const [messages, setmessages] = useState([]);
-
+  const navigate = useNavigate();
   const send = () => {
     const message = document.getElementById("chatInput").value;
     socket.emit("message", { message, id, Group });
@@ -38,6 +39,7 @@ const Chat = () => {
     socket.on("welcome", (data) => {
       setmessages((o) => [...o, data]);
       console.log(data.user, data.message);
+      navigate("/chat");
     });
 
     socket.on("userJoined", (data) => {
@@ -45,7 +47,7 @@ const Chat = () => {
       console.log(data.user, data.message);
     });
     socket.on("leave", (data) => {
-      // setmessages((o) => [...o, data]);
+      setmessages((o) => [...o, data]);
       console.log(data);
     });
   }, []);

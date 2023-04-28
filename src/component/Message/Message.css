@@ -9,8 +9,11 @@
 .right{
     background-color: rgb(233, 223, 211);
     float: right;
+    word-wrap: break-word;
 }
 .left{
     background-color: ghostwhite;
     float: left;
+    word-wrap: break-word;
+
 }
