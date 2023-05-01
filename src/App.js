@@ -10,14 +10,7 @@ function App() {
       <div className="App">
         <Routes>
           <Route path="/" element={<Join />} />
-          <Route
-            path="/chat"
-            element={
-              <Protected>
-                <Chat />
-              </Protected>
-            }
-          />
+          <Route path="/chat" element={<Chat />} />
         </Routes>
       </div>
     </Router>

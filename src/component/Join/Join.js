@@ -1,6 +1,6 @@
 import { FormControl, Input, InputAdornment } from "@mui/material";
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 
 const Box = styled.div`
@@ -29,16 +29,16 @@ const Text = styled.div`
 
 let user, Group;
 
-const sendUser = () => {
-  user = document.getElementById("joinInput").value;
-  document.getElementById("joinInput").value = "";
-
-  Group = document.getElementById("joinInput1").value;
-  document.getElementById("joinInput1").value = "";
-};
-
 const Join = () => {
   const [name, setname] = useState("");
+  const [groupName, setgroupName] = useState("");
+  const navigate = useNavigate();
+
+  const sendUser = () => {
+    if (groupName && name) {
+      navigate("/chat", { state: { name, groupName } });
+    }
+  };
 
   return (
     <div
@@ -74,16 +74,15 @@ const Join = () => {
               <Input
                 id="joinInput1"
                 placeholder="Group Name"
-                onChange={(e) => setname(e.target.value)}
+                onChange={(e) => setgroupName(e.target.value)}
                 startAdornment={
                   <InputAdornment position="start"></InputAdornment>
                 }
               />
             </FormControl>
           </div>
-          <Link onClick={(e) => (!name ? e.preventDefault() : null)} to="/chat">
-            <Button onClick={sendUser}>Go For Chat</Button>
-          </Link>
+
+          <Button onClick={sendUser}>Go For Chat</Button>
         </Box>
       </div>
     </div>

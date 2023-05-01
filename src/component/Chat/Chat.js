@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { Group, user } from "../Join/Join";
 import socketIO from "socket.io-client";
 import styled from "styled-components";
 import { FormControl, Input, InputAdornment } from "@mui/material";
 import Message from "../Message/Message";
 import ScrollToBottom from "react-scroll-to-bottom";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const Box = styled.div`
   border: 1px solid #fefcff;
@@ -13,47 +12,61 @@ const Box = styled.div`
   height: 500px;
   box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175);
 `;
-let socket;
 
 const ENDPOINT = "http://localhost:9000/";
+const socket = socketIO(ENDPOINT, { transports: ["websocket"] });
 
 const Chat = () => {
   const [id, setid] = useState("");
-  const [messages, setmessages] = useState([]);
+  const location = useLocation();
+  const { groupName: Group, name: user } = location?.state || {
+    groupName: "",
+    name: "",
+  };
   const navigate = useNavigate();
+  console.log(location);
+  const [messages, setmessages] = useState([]);
   const send = () => {
     const message = document.getElementById("chatInput").value;
-    socket.emit("message", { message, id, Group });
+    socket.emit("message", { message, id, Group, user });
     document.getElementById("chatInput").value = "";
   };
   console.log(messages);
   useEffect(() => {
-    socket = socketIO(ENDPOINT, { transports: ["websocket"] });
-    socket.on("connect", () => {
-      // alert("connected");
-      setid(socket.id);
-    });
+    if (Group && user) {
+      socket.on("connect", () => {
+        // alert("connected");
+        setid(socket.id);
+      });
 
-    socket.emit("joined", { user, Group });
+      socket.on("sendOldMessage", (data) => {
+        setmessages((o) => [...o, ...data]);
+      });
 
-    socket.on("welcome", (data) => {
-      setmessages((o) => [...o, data]);
-      console.log(data.user, data.message);
-      navigate("/chat");
-    });
+      socket.emit("joined", { user, Group });
 
-    socket.on("userJoined", (data) => {
-      setmessages((o) => [...o, data]);
-      console.log(data.user, data.message);
-    });
-    socket.on("leave", (data) => {
-      setmessages((o) => [...o, data]);
-      console.log(data);
-    });
+      socket.on("welcome", (data) => {
+        setmessages((o) => [...o, data]);
+        console.log(data.user, data.message);
+        localStorage.getItem("user", user);
+      });
+
+      socket.on("userJoined", (data) => {
+        setmessages((o) => [...o, data]);
+        console.log(data.user, data.message);
+      });
+      socket.on("leave", (data) => {
+        setmessages((o) => [...o, data]);
+        console.log(data);
+      });
+    } else {
+      navigate("/");
+    }
   }, []);
 
   useEffect(() => {
     socket.on("sendMessage", (data) => {
+      console.log(data);
       setmessages((o) => [...o, data]);
       console.log(data.user, data.message, data.id);
     });
