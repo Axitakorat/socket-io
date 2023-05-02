@@ -9,7 +9,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 const Box = styled.div`
   border: 1px solid #fefcff;
   width: 45%;
-  height: 500px;
+  height: 600px;
   box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175);
 `;
 
@@ -18,22 +18,30 @@ const socket = socketIO(ENDPOINT, { transports: ["websocket"] });
 
 const Chat = () => {
   const [id, setid] = useState("");
+  console.log(".....", socket.id);
   const location = useLocation();
-  const { groupName: Group, name: user } = location?.state || {
+  const { groupName, name } = location?.state || {
     groupName: "",
     name: "",
   };
   const navigate = useNavigate();
   console.log(location);
   const [messages, setmessages] = useState([]);
+
   const send = () => {
     const message = document.getElementById("chatInput").value;
-    socket.emit("message", { message, id, Group, user });
-    document.getElementById("chatInput").value = "";
+
+    if (message.replace(/\s/g, "").length <= 0) {
+    } else {
+      return (
+        socket.emit("message", { message, id, groupName, name }),
+        (document.getElementById("chatInput").value = "")
+      );
+    }
   };
   console.log(messages);
   useEffect(() => {
-    if (Group && user) {
+    if (groupName && name) {
       socket.on("connect", () => {
         // alert("connected");
         setid(socket.id);
@@ -43,17 +51,16 @@ const Chat = () => {
         setmessages((o) => [...o, ...data]);
       });
 
-      socket.emit("joined", { user, Group });
+      socket.emit("joined", { name, groupName });
 
       socket.on("welcome", (data) => {
         setmessages((o) => [...o, data]);
-        console.log(data.user, data.message);
-        localStorage.getItem("user", user);
+        console.log(data.name, data.message);
       });
 
       socket.on("userJoined", (data) => {
         setmessages((o) => [...o, data]);
-        console.log(data.user, data.message);
+        console.log(data.name, data.message);
       });
       socket.on("leave", (data) => {
         setmessages((o) => [...o, data]);
@@ -66,9 +73,9 @@ const Chat = () => {
 
   useEffect(() => {
     socket.on("sendMessage", (data) => {
-      console.log(data);
+      console.log(data.id);
       setmessages((o) => [...o, data]);
-      console.log(data.user, data.message, data.id);
+      console.log(data.name, data.message, data.id);
     });
 
     // return () => {
@@ -84,24 +91,26 @@ const Chat = () => {
         height: "100vh",
       }}
     >
-      <Box className="">
-        <h2 style={{ textAlign: "center" }}>{Group}</h2>
-
-        <div className="chatBox">
+      <Box>
+        <h2 style={{ textAlign: "center" }}>{groupName}</h2>
+        <ScrollToBottom className="h-75">
           {messages.map((item, i) => (
-            <Message
-              user={item.id === id ? "" : item.user}
-              message={item.message}
-              classs={item.id === id ? "right" : "left"}
-            />
+            <div className="chatBox">
+              <Message
+                name={name.id === id ? "" : item.name}
+                message={item.message}
+                classs={name.id === name ? "right" : "left"}
+              />
+              {console.log(item.name === name)}
+            </div>
           ))}
-        </div>
+        </ScrollToBottom>
 
         <div
           style={{
-            margin: "30px",
+            marginLeft: "30px",
             width: "90%",
-            marginTop: "45%",
+            alignItems: "center",
             display: "flex",
           }}
         >
@@ -114,9 +123,10 @@ const Chat = () => {
               }
             />
           </FormControl>
-          <div>
-            <button onClick={send}>send</button>
-          </div>
+
+          <button onClick={send} style={{ cursor: "pointer" }}>
+            send
+          </button>
         </div>
       </Box>
     </div>
