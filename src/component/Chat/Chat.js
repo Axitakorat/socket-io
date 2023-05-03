@@ -18,7 +18,7 @@ const socket = socketIO(ENDPOINT, { transports: ["websocket"] });
 
 const Chat = () => {
   const [id, setid] = useState("");
-  console.log(".....", socket.id);
+  console.log(id);
   const location = useLocation();
   const { groupName, name } = location?.state || {
     groupName: "",
@@ -33,25 +33,22 @@ const Chat = () => {
 
     if (message.replace(/\s/g, "").length <= 0) {
     } else {
-      return (
-        socket.emit("message", { message, id, groupName, name }),
-        (document.getElementById("chatInput").value = "")
-      );
+      // console.log("................", id);
+      document.getElementById("chatInput").value = "";
+
+      socket.emit("message", { message, id: socket.id, groupName, name });
     }
   };
-  console.log(messages);
+  console.log(socket.id);
   useEffect(() => {
     if (groupName && name) {
-      socket.on("connect", () => {
-        // alert("connected");
-        setid(socket.id);
-      });
-
       socket.on("sendOldMessage", (data) => {
         setmessages((o) => [...o, ...data]);
       });
 
-      socket.emit("joined", { name, groupName });
+      socket.emit("joined", { name, groupName }, ({ error }) => {
+        alert(error);
+      });
 
       socket.on("welcome", (data) => {
         setmessages((o) => [...o, data]);
@@ -73,8 +70,8 @@ const Chat = () => {
 
   useEffect(() => {
     socket.on("sendMessage", (data) => {
-      console.log(data.id);
       setmessages((o) => [...o, data]);
+      setid(data.id);
       console.log(data.name, data.message, data.id);
     });
 
@@ -94,14 +91,14 @@ const Chat = () => {
       <Box>
         <h2 style={{ textAlign: "center" }}>{groupName}</h2>
         <ScrollToBottom className="h-75">
-          {messages.map((item, i) => (
+          {messages.map((item) => (
             <div className="chatBox">
+              {console.log(id, socket.id)}
               <Message
-                name={name.id === id ? "" : item.name}
+                name={item.name === name ? "" : item.name}
                 message={item.message}
-                classs={name.id === name ? "right" : "left"}
+                classs={item.name === name ? "right" : "left"}
               />
-              {console.log(item.name === name)}
             </div>
           ))}
         </ScrollToBottom>
